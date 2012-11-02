@@ -10,7 +10,6 @@ class MyThread(threading.Thread):
 	"""This is  for running"""
 	def __init__(self,workQueue,resultQueue,timeout = 30):
 		threading.Thread.__init__(self)
-
 		self.timeout = timeout
 		self.setDaemon(True)
 		self.workQueue = workQueue
@@ -107,7 +106,6 @@ def test_job(url):
 		data = data.decode(code)
 		print data[:1000]
 		print type(data)
-
 
 if __name__ =='__main__':
 	test_job('http://www.baidu.com')
