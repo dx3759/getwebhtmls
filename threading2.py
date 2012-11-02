@@ -23,11 +23,13 @@ class MyThread(threading.Thread):
 			try:
 				callable , args = self.workQueue.get(timeout = self.timeout)
 				#我们要执行的任务
-				print 'worksize',self.workQueue.qsize()
+				#print 'worksize',self.workQueue.qsize()
 				res = callable(args)#res为列表
+
 				if res:
 					for temp in res:
 						self.resultQueue.put(temp)#以什么格式放入呢
+						time.sleep(0.1)
 			except Queue.Empty:#队列为空时，结束还是等待呢
 				time.sleep(2)
 				break
@@ -51,21 +53,23 @@ class MyThread2(threading.Thread):
 	def run(self):
 		while True:
 			if self.time == 0:
-				print '    时间    深度    当前完成    待完成'
+				print '    时间   深度    当前完成    待完成'
 				print time.ctime().split(' ')[4],'  ',
-				print self.deep,' ',
-				print self.result.qsize(),' ',
+				print self.deep,'       ',
+				print self.result.qsize(),'       ',
 				print self.work.qsize()
 				self.time = 1
+
 			else:
 				print time.ctime().split(' ')[4],'  ',
-				print self.deep,' ',
-				print self.result.qsize(),' ',
+				print self.deep,'       ',
+				print self.result.qsize(),'       ',
 				print self.work.qsize()
+
 			time.sleep(self.stime)
 
 
-class  ThreadPool(object):
+class ThreadPool(object):
 	def __init__(self, workQueue,resultQueue, num_of_threads = 10):
 		super(ThreadPool , self).__init__()
 		self.workQueue = workQueue
@@ -103,6 +107,7 @@ def test_job(url):
 		data = data.decode(code)
 		print data[:1000]
 		print type(data)
+
 
 if __name__ =='__main__':
 	test_job('http://www.baidu.com')

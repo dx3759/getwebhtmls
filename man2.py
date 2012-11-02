@@ -9,9 +9,11 @@ import urllib,urllib2
 import optparse
 import threading
 import logging
+import logging2
 import doctest
 import threading2
 import time
+import sqlite3
 
 #I think i will get all the options and args
 parser = optparse.OptionParser()
@@ -26,19 +28,26 @@ options,args = parser.parse_args()
 print "all the optins",options
 print "all the args",args
 
-#workQueue is ready to do.resultQueue is having done.
+#workQueue is ready to do.resultQueue is having done.alldone is finish task
 workQueue = Queue.Queue()
 resultQueue = Queue.Queue()
 alldoneQueue = Queue.Queue()
+
+
+#logging2 初始化，以后可以使用logging2来插入log
+logging2.init(options.loglevel,options.logfile)
+
 
 def analyseurl(urls):
 	"""
 	功能：分析urls,返回列表格式的字典
 
 	字典格式：{'name':names,'urls':url}
+	这里将符合要求的页面信息插入数据库,还包括日志信息
+
 	"""
 	returns=[]
-	print urls
+	#print urls
 	html = urllib2.urlopen(urls,timeout=30)
 	try:
 		data = html.read()
@@ -48,12 +57,14 @@ def analyseurl(urls):
 			code = m.group(1)
 		if code:
 			data = data.decode(code)
-		print 'reading'
+		logging2.debug('reading')
+		#print 'reading'
 	except:
-		print 'error on reading'
+		logging2.error('error ong reading')
 	soup = BeautifulSoup.BeautifulSoup(data)
 	temp = soup.findAll('a',href=re.compile(r'http.*'))
-	print 'analysing'
+	logging2.debug('analysing')
+	#print 'analysing'
 	for tt in temp:
 		hrefs = tt['href']#have?
 		if hrefs.startswith('http'):
@@ -70,13 +81,14 @@ def main():
 	i = 0
 	th = threading2.ThreadPool(workQueue,resultQueue,options.number)
 	td = threading2.MyThread2(workQueue,resultQueue,i,10)
+
 	while i <= options.deep:
 		if i == 0:
 			th.add_jobs(analyseurl,options.urls)
 			i += 1
 			th.wait_for_done()
 			td.deep = i
-		else:#这里还有问题
+		else:#这里还有问题,现在为方案一
 			if resultQueue.qsize():#当前任务队列完成，结果队列满了
 				while resultQueue.qsize():#有任务，取出任务
 					t = resultQueue.get()
@@ -87,9 +99,8 @@ def main():
 				th.wait_for_done()
 				i += 1
 				td.deep = i
-				print workQueue.qsize()
 	if resultQueue.qsize():
-		print 'done and result to alldone'
+		#print 'done and result to alldone'
 		while resultQueue.qsize():
 			t = resultQueue.get()
 			alldoneQueue.put(t)

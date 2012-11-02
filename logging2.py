@@ -15,17 +15,19 @@ class logging2(threading.Thread):
 	"""定义一个写日志的线程，调用logging写入文件"""
 	A_Queue = Queue.Queue() #用来存放 日志队列
 
-	def __init__(self):
+	#logging.basicConfig(level = logging.DEBUG,format = '%(asctime)s %(levelname)-8s %(message)s',datefmt = '%a,%d %b %Y %H:%M:%S',filename = '/tmp/myapp.log',filemode = 'w')
+	def __init__(self,levels,files):
 		threading.Thread.__init__(self)
 		self.name = 'logging2'
+		logging.basicConfig(level = levels,format = '%(asctime)s %(levelname)-8s %(message)s',datefmt = '%a,%d %b %Y %H:%M:%S',filename = files,filemode = 'w')
 
 	def run(self):
 		while 1:
 			data = logging2.A_Queue.get()
-			print 'data',data
+			#print 'data',data
 			loglevel = data.keys()[0]
 			content = data.values()[0]
-			getattr(logging,loglevel)(conten)
+			getattr(logging,loglevel)(content)
 
 def debug(content):
 	logging2.A_Queue.put({'debug':content})
@@ -47,15 +49,15 @@ def init(levels,files):
 	if levels == 1:
 		levels =  logging.DEBUG
 	elif levels == 2:
-		levels = logging.INGO
+		levels = logging.INFO
 	elif levels == 3:
 		levels = logging.WARNING
 	elif levels == 4:
 		levels = logging.ERROR
 	elif levels == 5:
 		levels = logging.CRITICAL
-	logging.basicConfig(level = levels,format = '%(asctime)s %(levelname)-8s %(message)s',datefmt = '%a,%d %b %Y %H:%M:%S',filename = files,filemode = 'w')
-	cc = logging2()
+	#logging.basicConfig(level = levels,format = '%(asctime)s %(levelname)-8s %(message)s',datefmt = '%a,%d %b %Y %H:%M:%S',filename = files,filemode = 'w')
+	cc = logging2(levels,files)
 	cc.setDaemon(True)
 	cc.start()
 
