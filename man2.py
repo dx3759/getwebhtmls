@@ -11,7 +11,7 @@ import threading
 import logging
 import doctest
 import threading2
-
+import time
 
 #I think i will get all the options and args
 parser = optparse.OptionParser()
@@ -26,10 +26,10 @@ options,args = parser.parse_args()
 print "all the optins",options
 print "all the args",args
 
-#workingQueue is ready to do.resultQueue is having done.
-workingQueue = Queue.Queue()
+#workQueue is ready to do.resultQueue is having done.
+workQueue = Queue.Queue()
 resultQueue = Queue.Queue()
-
+alldoneQueue = Queue.Queue()
 
 def analyseurl(urls):
 	"""
@@ -46,11 +46,9 @@ def analyseurl(urls):
 		m = rr.search(data)
 		if m:
 			code = m.group(1)
-			print 'code=',code###
 		if code:
 			data = data.decode(code)
 		print 'reading'
-		print data[:1000]
 	except:
 		print 'error on reading'
 	soup = BeautifulSoup.BeautifulSoup(data)
@@ -69,11 +67,36 @@ def analyseurl(urls):
 
 
 def main():
-	pass
-
-
-
+	i = 0
+	th = threading2.ThreadPool(workQueue,resultQueue,options.number)
+	td = threading2.MyThread2(workQueue,resultQueue,i,10)
+	while i <= options.deep:
+		if i == 0:
+			th.add_jobs(analyseurl,options.urls)
+			i += 1
+			th.wait_for_done()
+			td.deep = i
+		else:#这里还有问题
+			if resultQueue.qsize():#当前任务队列完成，结果队列满了
+				while resultQueue.qsize():#有任务，取出任务
+					t = resultQueue.get()
+					alldoneQueue.put(t)
+					th.add_jobs(analyseurl,t['urls'])
+				###如何新建线程呢
+				th.createThreadPool(options.number)
+				th.wait_for_done()
+				i += 1
+				td.deep = i
+				print workQueue.qsize()
+	if resultQueue.qsize():
+		print 'done and result to alldone'
+		while resultQueue.qsize():
+			t = resultQueue.get()
+			alldoneQueue.put(t)
+	print '干完了，结束'
+	return 0
 
 if __name__ == '__main__':
 	#analyseurl('http://www.baidu.com')
-	pass
+	main()
+	print 'alldone',alldoneQueue.qsize()

@@ -19,21 +19,28 @@ class MyThread(threading.Thread):
 
 	def run(self):
 		"""get and run and put"""
-		try:
-			callable , args = self.workQueue.get(timeout = self.timeout)
-		#我们要执行的任务
-			res = callable(args)#res为列表
-			if res:
-				for temp in res:
-					self.resultQueue.put(temp)#以什么格式放入呢
-		except Queue.Empty:#队列为空时，结束还是等待呢
-			pass
-		except:
-			self.raise_exc(SystemExit)
+		while True:
+			try:
+				callable , args = self.workQueue.get(timeout = self.timeout)
+				#我们要执行的任务
+				print 'worksize',self.workQueue.qsize()
+				res = callable(args)#res为列表
+				if res:
+					for temp in res:
+						self.resultQueue.put(temp)#以什么格式放入呢
+			except Queue.Empty:#队列为空时，结束还是等待呢
+				time.sleep(2)
+				break
+			except:
+				sys.exit()
 
 class MyThread2(threading.Thread):
 	"""this is for print the schedule"""
+
 	def __init__(self,work,result,deep,sleeptime):
+		threading.Thread.__init__(self)
+
+		self.setDaemon(True)
 		self.time = 0
 		self.work = work
 		self.result = result
@@ -44,36 +51,41 @@ class MyThread2(threading.Thread):
 	def run(self):
 		while True:
 			if self.time == 0:
-				print '时间    深度    当前完成    待完成'
+				print '    时间    深度    当前完成    待完成'
+				print time.ctime().split(' ')[4],'  ',
+				print self.deep,' ',
+				print self.result.qsize(),' ',
+				print self.work.qsize()
 				self.time = 1
 			else:
-				print time.ctime,'    ',
-				print self.deep,'   ',
-				print self.result.qsize,'   ',
-				print self.work.qsize
-			if self.work.qsize == 0:
-				self.raise_exc(SystemExit)
+				print time.ctime().split(' ')[4],'  ',
+				print self.deep,' ',
+				print self.result.qsize(),' ',
+				print self.work.qsize()
 			time.sleep(self.stime)
 
 
 class  ThreadPool(object):
 	def __init__(self, workQueue,resultQueue, num_of_threads = 10):
-		super(ThreadPool , self).__init__(self)
+		super(ThreadPool , self).__init__()
 		self.workQueue = workQueue
 		self.resultQueue = resultQueue
 		self.thread =[]
-		self.__createThreadPool(num_of_threads)
-
-	def __createThreadPool( self, num_of_threads):
+		self.createThreadPool(num_of_threads)
+	
+	def createThreadPool( self, num_of_threads):
 		""" 新建线程，并准备执行"""
 		for i in range( num_of_threads):
 			thread = MyThread(self.workQueue,self.resultQueue)
 			self.thread.append(thread)
 		
-	def wait_for_complete(self):
+	def wait_for_done(self):
 		"""线程完成"""
-		pass
+		while len(self.thread):
+			thread = self.thread.pop()
 
+			if thread.isAlive():
+				thread.join()
 	def add_jobs(self,callable,args):
 		"""添加工作到工作队列"""
 		self.workQueue.put((callable,args))
