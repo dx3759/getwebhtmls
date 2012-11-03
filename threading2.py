@@ -17,18 +17,24 @@ class MyThread(threading.Thread):
 		self.start()
 
 	def run(self):
-		"""get and run and put"""
+		"""get and run and put
+		出现情况，任务队列未清空，任务结束
+		解决，线程添加出错处理
+		"""
 		while True:
 			try:
 				callable , args = self.workQueue.get(timeout = self.timeout)
 				#我们要执行的任务
 				#print 'worksize',self.workQueue.qsize()
-				res = callable(args)#res为列表
+				try:
+					res = callable(args)#res为列表
 
-				if res:
-					for temp in res:
-						self.resultQueue.put(temp)#以什么格式放入呢
-						time.sleep(0.1)
+					if res:
+						for temp in res:
+							self.resultQueue.put(temp)#以什么格式放入呢
+							time.sleep(0.1)
+				except:
+					continue
 			except Queue.Empty:#队列为空时，结束还是等待呢
 				time.sleep(2)
 				break
