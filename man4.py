@@ -18,7 +18,7 @@ import sqlite3
 parser = optparse.OptionParser()
 parser.add_option('-u','--urls', dest = "urls",help = "the urls ",metavar = "URLS")
 parser.add_option('-d','--deep',type = 'int', dest = "deep",help = "the deep", metavar = "DEEP",default = 0)
-parser.add_option('-f' , '--file',type = 'string' , dest = 'logfile', help = "the file is to record the logs", metavar = "LOGFILE",default = '/tmp/tmp.log')
+parser.add_option('-f' , '--file',type = 'string' , dest = 'logfile', help = "the file is to record the logs", metavar = "LOGFILE",default = 'spider.log')
 parser.add_option('-l','--loglevel',type = 'int' ,dest = 'loglevel',help = 'for loglevel(1-5),the number is big,the level is heigh',metavar = 'LOGLEVEL(1-5)',default = 1)
 parser.add_option('--testself',dest = 'test',action = 'store_true',help = 'self test or test myself')
 parser.add_option('-t','--thread',type = 'int',dest = 'number' ,help = 'the threadnumber',metavar = 'NUMBER',default =10)
@@ -111,6 +111,7 @@ def analyseurl(urls):
 		#print 'error'
 		#logging2.error('error ong reading '+urls)
 	return returns
+
 
 
 def main():
